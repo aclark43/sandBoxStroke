@@ -1,11 +1,12 @@
 %%% Script for Analyzing Huxlin Data and Creating Manuscript Figures
 clear all
 close all
-temp = load('dataTableStroke.mat');
+
 
 temp = load('tableInfoStoke.mat');
 taskPPTrials = temp.taskPPTrials.tableInfo;
-
+clear temp
+temp = load('dataTableStroke.mat');
 tableSubjectInfo = struct2table(temp.dataTable); %% Also Table 1
 %% Figure 2A - Heatmaps for Fixation
 axisVal = 25;
@@ -125,9 +126,23 @@ end
 
 
 %% Figure 2B - BCEA for Fixation
+for ii = 1:height(tableSubjectInfo)
+    %convert arcmin to deg by dividing by 60
+    bceaAllTrials(ii) = get_bcea(tableSubjectInfo.taskX{ii}/60,tableSubjectInfo.taskY{ii}/60);
+    %only keep x any y traces that are within 10 degrees
+    idxFix = tableSubjectInfo.fixX{ii} < 60*10 & tableSubjectInfo.fixX{ii} > -60*10 &...
+        tableSubjectInfo.fixY{ii} < 60*10 & tableSubjectInfo.fixY{ii} > -60*10;
+    %convert arcmin to deg
+    bceaAllFix(ii) = get_bcea(tableSubjectInfo.fixX{ii}(idxFix)/60,...
+        tableSubjectInfo.fixY{ii}(idxFix)/60);
+end
+
 
 figure;
-boxplot(tableSubjectInfo.bceaFix,...
+% boxplot(tableSubjectInfo.bceaFix,...
+%     tableSubjectInfo.Stroke','PlotStyle','compact',...
+%     'Labels',{'Control','Patient'});
+boxplot(bceaAllFix,...
     tableSubjectInfo.Stroke','PlotStyle','compact',...
     'Labels',{'Control','Patient'});
 % plot(rand(5,1))
@@ -139,8 +154,8 @@ yticks([.3 1 2 10])
 xticks([1 2])
 % xticklabels({''});
 % xticklabels({'Control','Patient'});
-[h,p,~,sts] = ttest2(tableSubjectInfo.bceaFix(tableSubjectInfo.Stroke == 1),...
-    tableSubjectInfo.bceaFix(tableSubjectInfo.Stroke == 0));
+[h,p,~,sts] = ttest2(bceaAllFix(tableSubjectInfo.Stroke == 1),...
+    bceaAllFix(tableSubjectInfo.Stroke == 0));
 title(sprintf('n.s., p = %.2f',p));
 ylabel('BCEA (deg^2)')
 
@@ -843,7 +858,7 @@ xticklabels({'Towards BF','Away from BF'});
 title(sprintf('p = %.3f',p));
 set(gca,'FontSize',14);
 
-%%
+%% MS
 load('msAllAnalysis.mat')
 
 % msAllAnalysis.task = msTask;
@@ -1585,7 +1600,9 @@ end
 idx = find(tableSubjectInfo.Acuity < 60);
 
 figure;
-boxplot(tableSubjectInfo.bceaTask,...
+% boxplot(tableSubjectInfo.bceaTask,...
+%     tableSubjectInfo.Stroke','PlotStyle','compact','Labels',{'Control','Patient'});
+boxplot(bceaAllTrials,...
     tableSubjectInfo.Stroke','PlotStyle','compact','Labels',{'Control','Patient'});
 
 set(gca, 'YScale', 'log')
@@ -1595,8 +1612,8 @@ xticks([1 2])
 % xticklabels({'Control','Patient'});
 idx2 = (tableSubjectInfo.Acuity < 60);
 ylabel('BCEA (deg^2)')
-[h,p,~,tt] = ttest2(tableSubjectInfo.bceaTask(tableSubjectInfo.Stroke == 1& idx2),...
-    tableSubjectInfo.bceaTask(tableSubjectInfo.Stroke == 0& idx2));
+[h,p,~,tt] = ttest2(bceaAllTrials(tableSubjectInfo.Stroke == 1& idx2),...
+    bceaAllTrials(tableSubjectInfo.Stroke == 0& idx2));
 title(sprintf('p = %.2f',p));
 %% Figure 5B - Acuity for Task
 
