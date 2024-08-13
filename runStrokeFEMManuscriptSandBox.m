@@ -3,6 +3,9 @@ clear all
 close all
 temp = load('dataTableStroke.mat');
 
+temp = load('tableInfoStoke.mat');
+taskPPTrials = temp.taskPPTrials.tableInfo;
+
 tableSubjectInfo = struct2table(temp.dataTable); %% Also Table 1
 %% Figure 2A - Heatmaps for Fixation
 axisVal = 25;
@@ -136,7 +139,7 @@ yticks([.3 1 2 10])
 xticks([1 2])
 % xticklabels({''});
 % xticklabels({'Control','Patient'});
-[h,p] = ttest2(tableSubjectInfo.bceaFix(tableSubjectInfo.Stroke == 1),...
+[h,p,~,sts] = ttest2(tableSubjectInfo.bceaFix(tableSubjectInfo.Stroke == 1),...
     tableSubjectInfo.bceaFix(tableSubjectInfo.Stroke == 0));
 title(sprintf('n.s., p = %.2f',p));
 ylabel('BCEA (deg^2)')
@@ -456,6 +459,13 @@ y1 = [0 4];
 drawArrow(x1,y1,'linewidth',2,'color','k');
 legend(forlegs,{'5 s','500 ms'},'Location','southeast');
 text(2.4,1,'Blind Field','Rotation',90);
+
+[h,p,~,sts] = ttest(meansValsInd500Y(tableSubjectInfo.Stroke == 0),...
+    meansValsIndY(tableSubjectInfo.Stroke == 0))
+
+[h,p,~,sts] = ttest(meansValsInd500Y(tableSubjectInfo.Stroke == 1),...
+    meansValsIndY(tableSubjectInfo.Stroke == 1))
+
 %% Figure 4 MS Fixation
 
 subNum = length(subjectsAll);
@@ -545,9 +555,6 @@ prl.y = [3.4364948,2.8098791,2.8107243,-0.28045452,6.5732045,7.8145442,9.4996395
 
 load('MATFiles/MSFixationResultsHuxlin2.mat') %msFix from runHuxFixAnalysis
 
-% msAllAnalysis.task = msTask;
-msAllAnalysis.ID = subjectsAll;
-msAllAnalysis.PT = (~tableSubjectInfo.Stroke);
 
 % orangize ms based on first, second, etc in trial Fixation
 for ii = 1:subNum
@@ -836,103 +843,143 @@ xticklabels({'Towards BF','Away from BF'});
 title(sprintf('p = %.3f',p));
 set(gca,'FontSize',14);
 
+%%
+load('msAllAnalysis.mat')
 
+% msAllAnalysis.task = msTask;
+% msAllAnalysis.ID = subjectsAll;
+% msAllAnalysis.PT = (~tableSubjectInfo.Stroke);
 
-
-% load('msAllAnalysis.mat')
 % load('rotatedAligned.mat');
 %
-% values = [];
-% msThreshold = 5;
-% rotateExtra = 0;
-% majorAxis = 0:15:330;
-%
-% ii = 1;
-% for t = (find(tableSubjectInfo.Stroke == 1))'
-%     theta_deg = [];
-%     theta_radians = [];
-%     theta_deg = reshape(msAllAnalysis.fixation{t}.msAngleStructRotate,1,[]);
-%     theta_degNonRot = reshape(msAllAnalysis.fixation{t}.msAngleStruct,1,[]);
-%
-%     theta_radians = deg2rad(theta_deg);
-%     for i = 1:length(majorAxis)
-%         if majorAxis(i) == 0
-%             vecVals2{ii,i} = ((theta_deg < 15 & theta_deg >= 0) | ...
-%                 theta_deg > 345);
-%         else
-%             vecVals2{ii,i} = (theta_deg < majorAxis(i) + 15 &...
-%                 theta_deg > majorAxis(i)-15);
-%         end
-%         values2(ii,i) = length(find(vecVals2{ii,i}));
-%
-%         vecVals3{ii,i} = (theta_degNonRot < majorAxis(i) + 15 &...
-%             theta_degNonRot > majorAxis(i)-15);
-%         values3(ii,i) = length(find(vecVals3{ii,i}));
-%         SEMVal(ii,i) = sem((theta_deg(theta_deg < majorAxis(i) + 15 &...
-%             theta_deg > majorAxis(i)-15)));
-%     end
-%     ii = 1+ii;
-% end
-% hold on
-% rho2 = normalizeVector(mean(values2));
-% msNum.Patients = values2;
-% msNum.notRotatedPatients = values3;
-%
-% ii = 1;
-% for t = (find(tableSubjectInfo.Stroke == 0))'
-%     theta_deg = [];
-%     theta_radians = [];
-%     theta_deg = reshape(msAllAnalysis.fixation{t}.msAngleStruct,1,[]);
-%     theta_radians = deg2rad(theta_deg);
-%     for i = 1:length(majorAxis)
-%         if majorAxis(i) == 0
-%             vecVals2{ii,i} = ((theta_deg < 15 & theta_deg >= 0) | ...
-%                 theta_deg > 345);
-%         else
-%             vecVals2{ii,i} = (theta_deg < majorAxis(i) + 15 &...
-%                 theta_deg > majorAxis(i)-15);
-%         end
-%         values2(ii,i) = length(find(vecVals2{ii,i}));
-%
-%         SEMVal(ii,i) = sem((theta_deg(theta_deg < majorAxis(i) + 15 &...
-%             theta_deg > majorAxis(i)-15)));
-%     end
-%     ii = 1+ii;
-% end
-% msNum.Controls = values2;
-% msNum.Angles = majorAxis;
-%
-% P = msNum.Patients./max(msNum.Patients')';
-% C = msNum.Controls./max(msNum.Controls')';
-%
-% for ii = 1:(find(tableSubjectInfo.Stroke == 1))'
-%     P(ii,:) = msNum.Patients(ii,:)/sum(msNum.Patients(ii,:));
-% end
-% %     C = dNum.Controls./max(dNum.Controls')';
-% for ii = 1:(find(tableSubjectInfo.Stroke == 0))'
-%     C(ii,:) = msNum.Controls(ii,:)/sum(msNum.Controls(ii,:));
-% end
-%
-% [h,p] = ttest(mean([P(:,1:11)']), mean([P(:,13:23)'])); %divide in half
-%
-% [h,p] = ttest(mean([P(:,5:9)']), mean([P(:,17:21)'])); %look at up and down +- 30deg
-%
-% figure;
-% errorbar([0 1],[mean(sum([P(:,5:9)'])) mean(sum([P(:,17:21)']))],...
-%     [sem(sum([P(:,5:9)'])) sem(sum([P(:,17:21)']))],'-o');
-% ylabel('Probability of MS Direction');
-% xticks([0 1])
-% xlim([-.25 1.25])
-% xticklabels({'Towards BF','Away from BF'});
-% title('p = ',round(p,3))
-% set(gca,'FontSize',14);
-%
-% figure;
-% polarplot(deg2rad([majorAxis 0]),[mean(P) mean(P(:,1))],'-o'); hold on
-% polarplot(deg2rad([majorAxis 0]),[mean(P)+sem(P) mean(P(:,1))+sem(P(:,1))],'--');hold on
-% polarplot(deg2rad([majorAxis 0]),[mean(P)-sem(P) mean(P(:,1))-sem(P(:,1))],'--')
-% title('Probability of MS Direction');
+values = [];
+msThreshold = 5;
+rotateExtra = 0;
+majorAxis = 0:15:330;
 
+ii = 1;
+for t = (find(tableSubjectInfo.Stroke == 1))'
+    theta_deg = [];
+    theta_radians = [];
+    theta_deg = reshape(msAllAnalysis.fixation{t}.msAngleStructRotate,1,[]);
+    theta_degNonRot = reshape(msAllAnalysis.fixation{t}.msAngleStruct,1,[]);
+
+    theta_radians = deg2rad(theta_deg);
+    for i = 1:length(majorAxis)
+        if majorAxis(i) == 0
+            vecVals2{ii,i} = ((theta_deg < 15 & theta_deg >= 0) | ...
+                theta_deg > 345);
+        else
+            vecVals2{ii,i} = (theta_deg < majorAxis(i) + 15 &...
+                theta_deg > majorAxis(i)-15);
+        end
+        values2(ii,i) = length(find(vecVals2{ii,i}));
+
+        vecVals3{ii,i} = (theta_degNonRot < majorAxis(i) + 15 &...
+            theta_degNonRot > majorAxis(i)-15);
+        values3(ii,i) = length(find(vecVals3{ii,i}));
+        SEMVal(ii,i) = sem((theta_deg(theta_deg < majorAxis(i) + 15 &...
+            theta_deg > majorAxis(i)-15)));
+    end
+    ii = 1+ii;
+end
+hold on
+rho2 = normalizeVector(mean(values2));
+msNum.Patients = values2;
+msNum.notRotatedPatients = values3;
+
+ii = 1;
+for t = (find(tableSubjectInfo.Stroke == 0))'
+    theta_deg = [];
+    theta_radians = [];
+    theta_deg = reshape(msAllAnalysis.fixation{t}.msAngleStruct,1,[]);
+    theta_radians = deg2rad(theta_deg);
+    for i = 1:length(majorAxis)
+        if majorAxis(i) == 0
+            vecVals2{ii,i} = ((theta_deg < 15 & theta_deg >= 0) | ...
+                theta_deg > 345);
+        else
+            vecVals2{ii,i} = (theta_deg < majorAxis(i) + 15 &...
+                theta_deg > majorAxis(i)-15);
+        end
+        values2(ii,i) = length(find(vecVals2{ii,i}));
+
+        SEMVal(ii,i) = sem((theta_deg(theta_deg < majorAxis(i) + 15 &...
+            theta_deg > majorAxis(i)-15)));
+    end
+    ii = 1+ii;
+end
+msNum.Controls = values2;
+msNum.Angles = majorAxis;
+
+P = msNum.Patients./max(msNum.Patients')';
+C = msNum.Controls./max(msNum.Controls')';
+
+for ii = 1:(find(tableSubjectInfo.Stroke == 1))'
+    P(ii,:) = msNum.Patients(ii,:)/sum(msNum.Patients(ii,:));
+end
+%     C = dNum.Controls./max(dNum.Controls')';
+for ii = 1:(find(tableSubjectInfo.Stroke == 0))'
+    C(ii,:) = msNum.Controls(ii,:)/sum(msNum.Controls(ii,:));
+end
+
+[h,p,~,sts] = ttest(mean([P(:,5:9)']), mean([P(:,17:21)'])); %look at up and down +- 30deg
+
+figure;
+errorbar([0 1],[mean(sum([P(:,5:9)'])) mean(sum([P(:,17:21)']))],...
+    [sem(sum([P(:,5:9)'])) sem(sum([P(:,17:21)']))],'-o');
+ylabel('Probability of MS Direction');
+xticks([0 1])
+xlim([-.25 1.25])
+xticklabels({'Towards BF','Away from BF'});
+title('p = ',round(p,3))
+set(gca,'FontSize',14);
+
+figure;
+polarplot(deg2rad([majorAxis 0]),[mean(P) mean(P(:,1))],'-o'); hold on
+polarplot(deg2rad([majorAxis 0]),[mean(P)+sem(P) mean(P(:,1))+sem(P(:,1))],'--');hold on
+polarplot(deg2rad([majorAxis 0]),[mean(P)-sem(P) mean(P(:,1))-sem(P(:,1))],'--')
+title('Probability of MS Direction');
+
+upMat = [P(:,5),P(:,6),P(:,7),P(:,8),P(:,9)];
+up = [P(:,5)',P(:,6)',P(:,7)',P(:,8)',P(:,9)']/16;
+downMat = [P(:,17),P(:,18),P(:,19),P(:,20),P(:,21)];
+down = [P(:,17)',P(:,18)',P(:,19)',P(:,20)',P(:,21)']/16;
+left = [P(:,10)',P(:,11)',P(:,12)',P(:,13)',P(:,14)',P(:,15)',P(:,16)']/16;
+right = [P(:,1)',P(:,2)',P(:,3)',P(:,4)',P(:,22)',P(:,23)']/16;
+[h,p,~,sts] = ttest(sum(upMat'),sum(downMat'));
+
+for ii = 1:26
+    if ii == 3
+        continue;
+    end
+    counter = 1;ampFix=[];
+    for i = 1:length(msFix{ii}.msAmplitude)
+        idx = (msFix{ii}.msAmplitude{counter} < 30 &...
+            msFix{ii}.msAmplitude{counter} > 3);
+        ampFix(counter) = nanmean(msFix{ii}.msAmplitude{counter}(idx));
+        counter = counter + 1;
+    end
+    tIdx = (msAllAnalysis.task{ii}.msAmplitude < 30 &...
+         msAllAnalysis.task{ii}.msAmplitude > 3);
+    if sum(tIdx) == 0
+        amplTask(ii) = NaN;
+    else
+        amplTask(ii) = nanmean(msAllAnalysis.task{ii}.msAmplitude(tIdx));
+    end
+    amplFix(ii) = nanmean(ampFix);
+    numMSFitTask(ii) = length(find(tIdx))
+end
+[h,p]=ttest(amplTask,amplFix)
+figure;
+errorbar([1 2],[nanmean(amplTask) nanmean(amplFix)],...
+    [nanstd(amplTask) nanstd(amplFix)],...
+    '-o','Color','k');
+xticks([1 2])
+xticklabels({'Task','Fixation'});
+xlim([0 3])
+ylabel('Average Microsaccade Amplitude');
+    
 %% Figure 4 Drift Fixation
 load('huxlinDriftFixation.mat')
 subNum = height(tableSubjectInfo);
