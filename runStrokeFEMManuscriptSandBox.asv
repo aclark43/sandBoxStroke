@@ -1,154 +1,78 @@
 %%% Script for Analyzing Huxlin Data and Creating Manuscript Figures
 clear all
 close all
-temp = load('dataTableStroke.mat');
 
-tableSubjectInfo = struct2table(temp.dataTable); %% Also Table 1
-%% Figure 2A - Heatmaps for Fixation
-axisVal = 25;
-figure('Position',[2000 -10 1200 3000]);
-counter = 1;
-for ii = (find(tableSubjectInfo.Stroke == 1))' %Patients
-    subplot(4,4,counter)
-    if counter == 1
-    heatMapIm = generateHeatMapSimple( ...
-        tableSubjectInfo.fixX{ii}, ...
-        tableSubjectInfo.fixY{ii}, ...
-        'Bins', 30,...
-        'StimulusSize', 0,...
-        'AxisValue', axisVal,...
-        'Uncrowded', 4,...
-        'Borders', 1);
-    xlabel('arcminutes');
-    ylabel('arcminutes');
-    else
-        heatMapIm = generateHeatMapSimple( ...
-        tableSubjectInfo.fixX{ii}, ...
-        tableSubjectInfo.fixY{ii}, ...
-        'Bins', 30,...
-        'StimulusSize', 0,...
-        'AxisValue', axisVal,...
-        'Uncrowded', 4,...
-        'Borders', 0);
-    end
-    hold on
-    line([0 0],[-axisVal axisVal],'LineStyle','--','Color','k','LineWidth',1);
-    line([-axisVal axisVal],[0 0],'LineStyle','--','Color','k','LineWidth',1);
-    axis square
-    title(ii);
-    counter = counter + 1;
-end
+%% Params
+reprocess = 1; %reload in all the pprtrials
 
-figure('Position',[2000 -10 1200 3000]);
-counter = 1;
-for ii = (find(tableSubjectInfo.Stroke == 0))' %Controls
-    subplot(4,4,counter)
-    if ii == 15
-        [x,id] = unique(tableSubjectInfo.fixX{ii});
-        y = tableSubjectInfo.fixY{ii}(id);
-        heatMapIm2{counter} = generateHeatMapSimple( ...
-        x, ...
-        y, ...
-        'Bins', 30,...
-        'StimulusSize', 0,...
-        'AxisValue', axisVal,...
-        'Uncrowded', 4,...
-        'Borders', 0);
-    else
-    heatMapIm2{counter} = generateHeatMapSimple( ...
-        tableSubjectInfo.fixX{ii}, ...
-        tableSubjectInfo.fixY{ii}, ...
-        'Bins', 30,...
-        'StimulusSize', 0,...
-        'AxisValue', axisVal,...
-        'Uncrowded', 4,...
-        'Borders', 0);
-    end
-    hold on
-    line([0 0],[-axisVal axisVal],'LineStyle','--','Color','k','LineWidth',1);
-    line([-axisVal axisVal],[0 0],'LineStyle','--','Color','k','LineWidth',1);
-    axis square
-    title(ii);
-    
-    counter = counter + 1;
-end
-
-% %% Get some windows of fixations for 3 subjects
-% for ii = [4 6 8]
-%     x = tableSubjectInfo.fixX{ii};
-%     y = tableSubjectInfo.fixY{ii};
-%
-%     figure;
-%     plot(1:length(x),x);
-%     title(ii)
-% end
-% goodSamples8 = [213351 214863 ...
-%     221757 223634 ...
-%     224879 225828 ...
-%     228974 230686];
-%
-% goodSamples6 = [205766 208352 ...
-% 210967 213628 ...
-% 233359 234448 ...
-% 257190 257749];
-%
-% goodSamples4 = [67840 69146 ...
-%    71317  72459 ...
-%    74855  76054 ...
-%    84249  86534 ];
-%
-% figure;
-% counter = 1;
-% for ii = (find(tableSubjectInfo.Stroke == 1))'
-%   subplot(4,4,counter)
-%     temp = tableSubjectInfo.vfMap{ii};
-%     temp(isnan(temp)) = -20;
-%
-%     rotateAngle = 0;
-%     J = imrotate((temp),rotateAngle);
-%     J(find(J == -20)) = max(max(J));
-%
-%     imagesc(J);
-%     axis square;
-%     set(gca,'XTick',[],'YTick',[])
-%
-%     colormap((gray))
-%     counter = counter + 1;
-% end
-%
-% plotexamplemap(8,tableSubjectInfo, goodSamples8);
-% plotexamplemap(6,tableSubjectInfo, goodSamples6);
-% plotexamplemap(4,tableSubjectInfo, goodSamples4);
-
-
-%% Figure 2B - BCEA for Fixation
-
-figure;
-boxplot(tableSubjectInfo.bceaFix,...
-    tableSubjectInfo.Stroke','PlotStyle','compact',...
-    'Labels',{'Control','Patient'});
-% plot(rand(5,1))
-% sigline([2,4])
-
-set(gca, 'YScale', 'log')
-ylim([.05 10])
-yticks([.3 1 2 10])
-xticks([1 2])
-% xticklabels({''});
-% xticklabels({'Control','Patient'});
-[h,p,~,sts] = ttest2(tableSubjectInfo.bceaFix(tableSubjectInfo.Stroke == 1),...
-    tableSubjectInfo.bceaFix(tableSubjectInfo.Stroke == 0));
-title(sprintf('n.s., p = %.2f',p));
-ylabel('BCEA (deg^2)')
-
-%% Get some names lined up with subject names
 subjectsAll = {'HUX1','HUX3','HUX5','HUX6','HUX7','HUX8','HUX9','HUX11','HUX13','HUX14','HUX16',...
     'HUX4','HUX18','HUX10','HUX12','HUX17','HUX21','HUX22','HUX23','Martina','HUX24',...
-    'HUX25','HUX27','HUX28','HUX29','HUX30'}; %,'AshleyDDPI'};HUX17
+    'HUX25','HUX27','HUX28','HUX29','HUX30'};
+ageAll = [29 42 52 43 55 61 75 48 68 60 68 50 46 25 40 42 28 59 59 41 50 40 49 68 72 28];
+sexAll = [1 1 2 2 2 2 2 2 2 2 2 1 2 1 1 1 1 2 1 1 1 1 1 2 2 1];
+weeksPostLes = [186.1...
+    5.4...
+    280.7...
+    11.9...
+    249.6...
+    14.4...
+    123.9...
+    35 ...
+    27.6...
+    520.4...
+    10.3...
+    0 0 0 0 0 0 0 0 0 0 ...
+    26.6...
+    24 ...
+    159.7...
+    53.1...
+    14.6...
+    ];
 
-vfResults = load('C:\Users\Ruccilab\OneDrive - University of Rochester\Documents\Crowding\SummaryDocuments\HuxlinPTFigures\VFs\Scripts\VisualFieldAnalysis\patientInfoMat.mat');
+affHemText = {'partial hemianope, central 10° spared'...
+    'partial hemianope, central 10° spared',...
+    'bilateral continuous scotoma, central 10° affected bilaterally'...
+    'clean hemianope, central 10° affected'...
+    'partial hemianope, central 10° affected'...
+    'partial hemianope, central 10° affected'...
+    'upper quadrantanope, central 10° affected'...
+    'scotoma, central 10d° affected'...
+    'large scotoma, central 10° partially affected'...
+    'hemianope, central 10° spared'...
+    'clean hemianope, central 10° affected'...
+    '','','','','','','','','','',...
+    'upper left quandrantanopia, central 10° affected'...
+    'partial right hemianope, central 10° affected in upper field'...
+    'Partial right hemianope, central 10° largely spared'...
+    'lower right quadrantanope, central 10° affected in upper field'...
+    'partial right hemianope, central 10° affected in upper field'};
 
 for ii = 1:length(subjectsAll)
+    if strcmp('HUX4',subjectsAll{ii}) || ...
+            strcmp('AshleyDDPI',subjectsAll{ii}) || ...
+            strcmp('HUX12',subjectsAll{ii}) || ...
+            strcmp('HUX18',subjectsAll{ii}) || ...
+            strcmp('HUX17',subjectsAll{ii}) || ...
+            strcmp('HUX21',subjectsAll{ii}) || ...
+            strcmp('Martina',subjectsAll{ii}) || ...
+            strcmp('HUX22',subjectsAll{ii}) || ...
+            strcmp('HUX23',subjectsAll{ii}) || ...
+            strcmp('HUX24',subjectsAll{ii}) || ...
+            strcmp('HUX10',subjectsAll{ii})
+        group{ii} = 'Control';
+        control(ii) = 1;
+        params.group{ii} = 'Control';
+        params.control(ii) = 1;
+    else
+        params.group{ii} = 'Patient';
+        params.control(ii) = 0;
+        group{ii} = 'Patient';
+        control(ii) = 0;
+        
+    end
+end
+
+for ii = 1:length(subjectsAll) % Link Specific IDs with Huxlin data
     if strcmp('HUX3',subjectsAll{ii})
         huxID{ii} = 'RBG';
     elseif strcmp('HUX5',subjectsAll{ii})
@@ -186,6 +110,636 @@ for ii = 1:length(subjectsAll)
     end
 end
 
+vfResults = load('C:\Users\Ruccilab\OneDrive - University of Rochester\Documents\Crowding\SummaryDocuments\HuxlinPTFigures\VFs\Scripts\VisualFieldAnalysis\patientInfoMat.mat');
+
+% temp = load('tableInfoStoke.mat');
+% taskPPTrials = temp.taskPPTrials.tableInfo;
+% clear temp
+% temp = load('dataTableStroke.mat');
+% tableSubjectInfo = struct2table(temp.dataTable); %% Also Table 1
+
+%% Load in pptrial Data
+if reprocess == 1
+    for i = 1:length(subjectsAll)
+        
+        filepath = sprintf...
+            ('X:/Ashley/OLD_PreNewEyeris/HUXDataDDPI/ProcessedPPTrials/%s/Uncrowded_Unstabilized_0ecc', ...
+            subjectsAll{i});
+        
+        S = dir(filepath);
+        allPPTrials = [];
+        numSessions = sum([S(~ismember({S.name},{'.','..'})).isdir]);
+        
+        for s = 1:3
+            sesName = sprintf('ses%i',s);
+            sessionFilePath = sprintf('%s/%s',filepath,sesName);
+            
+            load(fullfile(sessionFilePath, 'pptrials.mat'), 'pptrials');
+            for p = 1:length(pptrials)
+                pptrials{p}.ses = sesName;
+            end
+            allPPTrials = [allPPTrials pptrials];
+        end
+        
+        pptrialsLoaded{i} = allPPTrials;
+        
+    end
+    
+    
+    for ii = 1:length(subjectsAll)
+        validMS = [];
+        [tracesMS, counterMS, validMS, emMS] = countingTrials(pptrialsLoaded{ii});
+        clean_pptrials_Task{ii} = pptrialsLoaded{ii}(~validMS.fixation);
+        clean_pptrials_Fixation{ii} = pptrialsLoaded{ii}(validMS.fixation);
+        tossingInfo{ii} = validMS;
+    end
+    
+    %% build table of all data from cleaned pptrials
+    
+    %Drift Sections Only
+    counter = 1;
+    for t = 1 %Not doing fixations because no fixations are drift only
+        tableInfo(counter).Task = t;
+        if t == 1
+            roi{1} = 'TimeTargetON';
+            roi{2} = 'TimeTargetOFF';
+            dataType = clean_pptrials_Task;
+        elseif t == 2 %Fixation
+            roi{1} = 'TimeFixationON';
+            roi{2} = 'TimeFixationOFF';
+            dataType = clean_pptrials_Fixation;
+        end
+        for ii = 1:length(subjectsAll)
+            for pp = 1:length(dataType{ii})
+                if tossingInfo{ii}.d(pp) == 1
+                    
+                    tableInfo(counter).Subject = ii;
+                    tableInfo(counter).TrialNum = dataType{ii}{pp}.id;
+                    tableInfo(counter).Control = control(ii);
+                    tableInfo(counter).Task = t;
+                    tableInfo(counter).Performance = dataType{ii}{pp}.Correct;
+                    if t == 1
+                        tableInfo(counter).Size = double(dataType{ii}{pp}.TargetStrokewidth/2)*...
+                            dataType{ii}{pp}.pixelAngle;
+                    else
+                        tableInfo(counter).Size = 16;
+                    end
+                    startTime = ceil(dataType{ii}{pp}.(roi{1})/(1000/341));
+                    endTime = min([floor(dataType{ii}{pp}.(roi{2})/(1000/341)) length(dataType{ii}{pp}.x.position)]);
+                    
+                    
+                    tx = dataType{ii}{pp}.x.position(startTime:endTime) + ...
+                        dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.xoffset;
+                    ty = dataType{ii}{pp}.y.position(startTime:endTime) + ...
+                        dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.yoffset;
+                    
+                    idxNoNans = find(~isnan(tx) &...
+                        ~isnan(ty) & tx < 200 & tx > -200 & ty < 200 & ty > -200);
+                    tableInfo(counter).x = tx(idxNoNans);
+                    tableInfo(counter).y = ty(idxNoNans);
+                    
+                    tableInfo(counter).xPlusOutTarget = dataType{ii}{pp}.x.position+ ...
+                        dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.xoffset; %Time before and after target pres
+                    tableInfo(counter).yPlusOutTarget = dataType{ii}{pp}.y.position+ ...
+                        dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.yoffset;
+                    
+                    tableInfo(counter).SamplingRate = 341;
+                    tableInfo(counter).DriftOnly = 1;
+                    tableInfo(counter).MS = 0;
+                    
+                    for d = 1:max([1 length(dataType{ii}{pp}.fixations)])
+                        if isempty(tableInfo(counter).x)
+                            tableInfo(counter).instSpX{d}= NaN;
+                            tableInfo(counter).instSpY{d}= NaN;
+                            tableInfo(counter).mn_speed(d)= NaN;
+                            tableInfo(counter).driftAngle{d}= NaN;
+                            tableInfo(counter).curvature(d)= NaN;
+                            tableInfo(counter).varx(d)= NaN;
+                            tableInfo(counter).vary(d)= NaN;
+                            tableInfo(counter).bcea(d)= NaN;
+                            tableInfo(counter).span(d)= NaN;
+                            tableInfo(counter).amplitude(d)= NaN;
+                            tableInfo(counter).prlDistance(d)= NaN;
+                            tableInfo(counter).prlDistanceX(d)= NaN;
+                            tableInfo(counter).prlDistanceY(d) = NaN;
+                            continue
+                        end
+                        [~,  tableInfo(counter).instSpX{d},...
+                            tableInfo(counter).instSpY{d},...
+                            tableInfo(counter).mn_speed(d),...
+                            tableInfo(counter).driftAngle{d},...
+                            tableInfo(counter).curvature(d),...
+                            tableInfo(counter).varx(d),...
+                            tableInfo(counter).vary(d),...
+                            tableInfo(counter).bcea(d),...
+                            tableInfo(counter).span(d), ...
+                            tableInfo(counter).amplitude(d), ...
+                            tableInfo(counter).prlDistance(d),...
+                            tableInfo(counter).prlDistanceX(d), ...
+                            tableInfo(counter).prlDistanceY(d)] = ...
+                            getDriftChar(tableInfo(counter).x, tableInfo(counter).y, 41, 1, 250, 341);
+                        tableInfo(counter).avDirection{d} = rad2deg(circ_mean(cell2mat(tableInfo(counter).driftAngle)));
+                        
+                        tempT.x = tableInfo(counter).x;
+                        tempT.y = tableInfo(counter).y;
+                        
+                        [~,tableInfo(counter).velocity(d), ...
+                            tableInfo(counter).velocityX{d},...
+                            tableInfo(counter).velocityY{d}] =...
+                            CalculateDriftVelocity(tempT,[1 55]);
+                        
+                        [~,~,tableInfo(counter).dCoefDsq(d), ~, ~, ...
+                            tableInfo(counter).SingleSegmentDsq{d},~,~] = ...
+                            CalculateDiffusionCoef(330, struct('x',tempT.x, 'y', tempT.y));
+                    end
+                    
+                    counter = counter + 1;
+                end
+            end
+        end
+    end
+    
+    %MS Sections and corresponding drift
+    for t = 1
+        tableInfo(counter).Task = t;
+        roi{1} = 'TimeTargetON';
+        roi{2} = 'TimeTargetOFF';
+        dataType = clean_pptrials_Task;
+        
+        for ii = 1:length(subjectsAll)
+            for pp = 1:length(dataType{ii})
+                %                 if tossingInfo{ii}.dms(pp) == 1 || tossingInfo{ii}.fixation(pp)
+                if isempty(dataType{ii}{pp}.x.position)
+                    continue
+                end
+                tableInfo(counter).Subject = ii;
+                tableInfo(counter).TrialNum = dataType{ii}{pp}.id;
+                tableInfo(counter).Control = control(ii);
+                tableInfo(counter).Task = t;
+                tableInfo(counter).Performance = dataType{ii}{pp}.Correct;
+                tableInfo(counter).Size = double(dataType{ii}{pp}.TargetStrokewidth/2)*...
+                    dataType{ii}{pp}.pixelAngle;
+                
+                startTime = ceil(dataType{ii}{pp}.(roi{1})/(1000/341));
+                endTime = min([floor(dataType{ii}{pp}.(roi{2})/(1000/341)) length(dataType{ii}{pp}.x.position)]);
+                
+                
+                tx = dataType{ii}{pp}.x.position(startTime:endTime) + ...
+                    dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.xoffset;
+                
+                ty = dataType{ii}{pp}.y.position(startTime:endTime) + ...
+                    dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.yoffset;
+                
+                idxNoNans = find(~isnan(tx) &...
+                    ~isnan(ty) & tx < 200 & tx > -200 & ty < 200 & ty > -200);
+                
+                tableInfo(counter).x = tx(idxNoNans);
+                tableInfo(counter).y = ty(idxNoNans);
+                
+                
+                tableInfo(counter).xPlusOutTarget = dataType{ii}{pp}.x.position + ...
+                    dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.xoffset; %Time before and after target pres
+                tableInfo(counter).yPlusOutTarget = dataType{ii}{pp}.y.position + ...
+                    dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.yoffset;
+                
+                tableInfo(counter).SamplingRate = 341;
+                tableInfo(counter).DriftOnly = 0;
+                tableInfo(counter).MS = 1;
+                tableInfo(counter).msStartIdx = dataType{ii}{pp}.microsaccades.start;
+                tableInfo(counter).msDurationIdx = dataType{ii}{pp}.microsaccades.duration;
+                tableInfo(counter).msEndIdx = dataType{ii}{pp}.microsaccades.start + ...
+                    dataType{ii}{pp}.microsaccades.duration;
+                
+                if ~isempty(tableInfo(counter).msStartIdx)
+                    if isempty(dataType{ii}{pp}.microsaccades.amplitude)
+                        if sum(tableInfo(counter).msEndIdx <= 0) >= 1 ||...
+                                sum(tableInfo(counter).msStartIdx <= 0) >= 1
+                            
+                            idx = find(tableInfo(counter).msEndIdx <= 0);
+                            tableInfo(counter).msStartIdx(idx) = 1;
+                            tableInfo(counter).msEndIdx(idx) = 1;
+                        end
+                        if sum(tableInfo(counter).msEndIdx > ...
+                                length(tableInfo(counter).xPlusOutTarget)) > 0 ||...
+                                sum(tableInfo(counter).msStartIdx > ...
+                                length(tableInfo(counter).xPlusOutTarget))
+                            idx = find(tableInfo(counter).msEndIdx > length(tableInfo(counter).xPlusOutTarget));
+                            tableInfo(counter).msEndIdx(idx) = length(tableInfo(counter).xPlusOutTarget);
+                            tableInfo(counter).msStartIdx(idx) = length(tableInfo(counter).xPlusOutTarget);
+
+                        end
+                        tableInfo(counter).msAmplitude = eucDist(...
+                            tableInfo(counter).xPlusOutTarget(tableInfo(counter).msStartIdx)...
+                            -tableInfo(counter).xPlusOutTarget(tableInfo(counter).msEndIdx), ...
+                            tableInfo(counter).yPlusOutTarget(tableInfo(counter).msStartIdx)...
+                            -tableInfo(counter).yPlusOutTarget(tableInfo(counter).msEndIdx));
+                        
+                        tableInfo(counter).msAngle = atan2d(...
+                            tableInfo(counter).xPlusOutTarget(tableInfo(counter).msStartIdx)...
+                            -tableInfo(counter).xPlusOutTarget(tableInfo(counter).msEndIdx), ...
+                            tableInfo(counter).yPlusOutTarget(tableInfo(counter).msStartIdx)...
+                            -tableInfo(counter).yPlusOutTarget(tableInfo(counter).msEndIdx));
+                        
+                        temp = ones(1,length(dataType{ii}{pp}.microsaccades.amplitude));
+                        for m = 1:length(temp)
+                            if dataType{ii}{pp}.microsaccades.start(m) < startTime(m) ||...
+                                    dataType{ii}{pp}.microsaccades.start(m) > endTime(m)
+                                tableInfo(counter).duringTrial(m) = 0;
+                            else
+                                tableInfo(counter).duringTrial(m) =  1;
+                            end
+                        end
+                    else
+                        tableInfo(counter).msAmplitude = dataType{ii}{pp}.microsaccades.amplitude;
+                        tableInfo(counter).msAngle = dataType{ii}{pp}.microsaccades.angle;
+                    end
+                    if t == 1
+                        tableInfo(counter).msRate = (length(tableInfo(counter).msStartIdx)) * 2; %Because the stim time is 500 ms
+                    elseif t == 2
+                        tableInfo(counter).msRate = (length(tableInfo(counter).msStartIdx)) / 5; %Because the stim time is 5s
+                    end
+                    tableInfo(counter).MS = 1;
+                end
+                %                     if t == 1
+                for d = 1:max([1 length(dataType{ii}{pp}.fixations)])
+                    if isempty(tableInfo(counter).x) || ...
+                            length(tableInfo(counter).x) < 75
+                        tableInfo(counter).instSpX{d}= NaN;
+                        tableInfo(counter).instSpY{d}= NaN;
+                        tableInfo(counter).mn_speed(d)= NaN;
+                        tableInfo(counter).driftAngle{d}= NaN;
+                        tableInfo(counter).curvature(d)= NaN;
+                        tableInfo(counter).varx(d)= NaN;
+                        tableInfo(counter).vary(d)= NaN;
+                        tableInfo(counter).bcea(d)= NaN;
+                        tableInfo(counter).span(d)= NaN;
+                        tableInfo(counter).amplitude(d)= NaN;
+                        tableInfo(counter).prlDistance(d)= NaN;
+                        tableInfo(counter).prlDistanceX(d)= NaN;
+                        tableInfo(counter).prlDistanceY(d) = NaN;
+                        continue;
+                    end
+                    [~,  tableInfo(counter).instSpX{d},...
+                        tableInfo(counter).instSpY{d},...
+                        tableInfo(counter).mn_speed(d),...
+                        tableInfo(counter).driftAngle{d},...
+                        tableInfo(counter).curvature(d),...
+                        tableInfo(counter).varx(d),...
+                        tableInfo(counter).vary(d),...
+                        tableInfo(counter).bcea(d),...
+                        tableInfo(counter).span(d), ...
+                        tableInfo(counter).amplitude(d), ...
+                        tableInfo(counter).prlDistance(d),...
+                        tableInfo(counter).prlDistanceX(d), ...
+                        tableInfo(counter).prlDistanceY(d)] = ...
+                        getDriftChar(tableInfo(counter).x, tableInfo(counter).y, 41, 1, 250, 341);
+                    tableInfo(counter).avDirection{d} = rad2deg(circ_mean(cell2mat(tableInfo(counter).driftAngle)));
+                    
+                    tempT.x = tableInfo(counter).x;
+                    tempT.y = tableInfo(counter).y;
+                    
+                    [~,tableInfo(counter).velocity(d), ...
+                        tableInfo(counter).velocityX{d},...
+                        tableInfo(counter).velocityY{d}] =...
+                        CalculateDriftVelocity(tempT,[1 55]);
+                    
+                    [~,~,tableInfo(counter).dCoefDsq(d), ~, ~, ...
+                        tableInfo(counter).SingleSegmentDsq{d},~,~] = ...
+                        CalculateDiffusionCoef(330, struct('x',tempT.x, 'y', tempT.y));
+                end
+                counter = counter + 1;
+            end
+            %             end
+        end
+    end
+    
+    %Fixation
+    for t = 2
+        tableInfo(counter).Task = t;
+        roi{1} = 'TimeFixationON';
+        roi{2} = 'TimeFixationOFF';
+        dataType = clean_pptrials_Fixation;
+        for ii = 1:length(subjectsAll)
+            for pp = 1:length(dataType{ii})
+                %                 if tossingInfo{ii}.dms(pp) == 1 || tossingInfo{ii}.fixation(pp)
+                if isempty(dataType{ii}{pp}.x.position)
+                    continue
+                end
+                tableInfo(counter).Subject = ii;
+                tableInfo(counter).TrialNum = dataType{ii}{pp}.id;
+                tableInfo(counter).Control = control(ii);
+                tableInfo(counter).Task = t;
+                tableInfo(counter).Performance = dataType{ii}{pp}.Correct;
+                
+                tableInfo(counter).Size = 16;
+                
+                startTime = ceil(dataType{ii}{pp}.(roi{1})/(1000/341));
+                endTime = min([floor(dataType{ii}{pp}.(roi{2})/(1000/341)) ...
+                    length(dataType{ii}{pp}.x.position)]);
+                
+                
+                tx = dataType{ii}{pp}.x.position(startTime:endTime) + ...
+                    dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.xoffset;
+                
+                ty = dataType{ii}{pp}.y.position(startTime:endTime) + ...
+                    dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.yoffset;
+                
+                idxNoNans = find(~isnan(tx) &...
+                    ~isnan(ty) & tx < 6*60 & tx > -6*60 & ty < 6*60 & ty > -6*60);
+                
+                tableInfo(counter).x = tx(idxNoNans);
+                tableInfo(counter).y = ty(idxNoNans);
+                
+                if length(tableInfo(counter).x) < floor(500/(1000/341))
+                    continue;
+                end
+                tableInfo(counter).x500 = tableInfo(counter).x(1:floor(500/(1000/341)));
+                tableInfo(counter).y500 = tableInfo(counter).y(1:floor(500/(1000/341)));
+                
+                tableInfo(counter).xPlusOutTarget = dataType{ii}{pp}.x.position + ...
+                    dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.xoffset; %Time before and after target pres
+                tableInfo(counter).yPlusOutTarget = dataType{ii}{pp}.y.position + ...
+                    dataType{ii}{pp}.pixelAngle * dataType{ii}{pp}.yoffset;
+                
+                tableInfo(counter).SamplingRate = 341;
+                tableInfo(counter).DriftOnly = 0;
+                tableInfo(counter).MS = 1;
+                tableInfo(counter).msStartIdx = dataType{ii}{pp}.microsaccades.start;
+                tableInfo(counter).msDurationIdx = dataType{ii}{pp}.microsaccades.duration;
+                tableInfo(counter).msEndIdx = dataType{ii}{pp}.microsaccades.start + ...
+                    dataType{ii}{pp}.microsaccades.duration;
+                
+                if ~isempty(tableInfo(counter).msStartIdx)
+                    if isempty(dataType{ii}{pp}.microsaccades.amplitude)
+                        if sum(tableInfo(counter).msEndIdx <= 0) >= 1 ||...
+                                sum(tableInfo(counter).msStartIdx <= 0) >= 1
+                            idx = find(tableInfo(counter).msEndIdx <= 0);
+                            tableInfo(counter).msStartIdx(idx) = 1;
+                            tableInfo(counter).msEndIdx(idx) = 1;
+                        end
+                        tableInfo(counter).msAmplitude = eucDist(...
+                            tableInfo(counter).xPlusOutTarget(tableInfo(counter).msStartIdx)...
+                            -tableInfo(counter).xPlusOutTarget(tableInfo(counter).msEndIdx), ...
+                            tableInfo(counter).yPlusOutTarget(tableInfo(counter).msStartIdx)...
+                            -tableInfo(counter).yPlusOutTarget(tableInfo(counter).msEndIdx));
+                        
+                        tableInfo(counter).msAngle = atan2d(...
+                            tableInfo(counter).xPlusOutTarget(tableInfo(counter).msStartIdx)...
+                            -tableInfo(counter).xPlusOutTarget(tableInfo(counter).msEndIdx), ...
+                            tableInfo(counter).yPlusOutTarget(tableInfo(counter).msStartIdx)...
+                            -tableInfo(counter).yPlusOutTarget(tableInfo(counter).msEndIdx));
+                        
+                        temp = ones(1,length(dataType{ii}{pp}.microsaccades.amplitude));
+                        for m = 1:length(temp)
+                            if dataType{ii}{pp}.microsaccades.start(m) < startTime(m) ||...
+                                    dataType{ii}{pp}.microsaccades.start(m) > endTime(m)
+                                tableInfo(counter).duringTrial(m) = 0;
+                            else
+                                tableInfo(counter).duringTrial(m) =  1;
+                            end
+                        end
+                    else
+                        tableInfo(counter).msAmplitude = dataType{ii}{pp}.microsaccades.amplitude;
+                        tableInfo(counter).msAngle = dataType{ii}{pp}.microsaccades.angle;
+                    end
+                    if t == 1
+                        tableInfo(counter).msRate = (length(tableInfo(counter).msStartIdx)) * 2; %Because the stim time is 500 ms
+                    elseif t == 2
+                        tableInfo(counter).msRate = (length(tableInfo(counter).msStartIdx)) / 5; %Because the stim time is 5s
+                    end
+                    tableInfo(counter).MS = 1;
+                end
+                %                     if t == 1
+                for d = 1:max([1 length(dataType{ii}{pp}.fixations)])
+                    if isempty(tableInfo(counter).x)
+                        tableInfo(counter).instSpX{d}= NaN;
+                        tableInfo(counter).instSpY{d}= NaN;
+                        tableInfo(counter).mn_speed(d)= NaN;
+                        tableInfo(counter).driftAngle{d}= NaN;
+                        tableInfo(counter).curvature(d)= NaN;
+                        tableInfo(counter).varx(d)= NaN;
+                        tableInfo(counter).vary(d)= NaN;
+                        tableInfo(counter).bcea(d)= NaN;
+                        tableInfo(counter).span(d)= NaN;
+                        tableInfo(counter).amplitude(d)= NaN;
+                        tableInfo(counter).prlDistance(d)= NaN;
+                        tableInfo(counter).prlDistanceX(d)= NaN;
+                        tableInfo(counter).prlDistanceY(d) = NaN;
+                        continue;
+                    end
+                    [~,  tableInfo(counter).instSpX{d},...
+                        tableInfo(counter).instSpY{d},...
+                        tableInfo(counter).mn_speed(d),...
+                        tableInfo(counter).driftAngle{d},...
+                        tableInfo(counter).curvature(d),...
+                        tableInfo(counter).varx(d),...
+                        tableInfo(counter).vary(d),...
+                        tableInfo(counter).bcea(d),...
+                        tableInfo(counter).span(d), ...
+                        tableInfo(counter).amplitude(d), ...
+                        tableInfo(counter).prlDistance(d),...
+                        tableInfo(counter).prlDistanceX(d), ...
+                        tableInfo(counter).prlDistanceY(d)] = ...
+                        getDriftChar(tableInfo(counter).x, tableInfo(counter).y, 41, 1, 250, 341);
+                    tableInfo(counter).avDirection{d} = rad2deg(circ_mean(cell2mat(tableInfo(counter).driftAngle)));
+                    
+                    tempT.x = tableInfo(counter).x;
+                    tempT.y = tableInfo(counter).y;
+                    
+                    [~,tableInfo(counter).velocity(d), ...
+                        tableInfo(counter).velocityX{d},...
+                        tableInfo(counter).velocityY{d}] =...
+                        CalculateDriftVelocity(tempT,[1 55]);
+                    
+                    [~,~,tableInfo(counter).dCoefDsq(d), ~, ~, ...
+                        tableInfo(counter).SingleSegmentDsq{d},~,~] = ...
+                        CalculateDiffusionCoef(330, struct('x',tempT.x, 'y', tempT.y));
+                end
+                counter = counter + 1;
+            end
+            %             end
+        end
+    end
+    
+    save('tableInfo');
+else
+    load('tableInfo.mat');
+end
+%% Get Thresholds
+%load(dataAll2.mat); %larger set for every trial - not just at threshold
+if reprocess == 1
+    xl = [0.1, 11];
+    yl = [0, 1.05];
+    gamma = 0.25;
+    
+    % load(thresh.mat);
+    
+    for ii = 1:length(unique([tableInfo(:).Subject]))
+        
+        idx = find([tableInfo(:).Subject] == ii & ...
+            [tableInfo(:).Performance] < 3);
+        
+        [thresh(ii),~,~,xi{ii},yi{ii}] = psyfitCrowding(...
+            round([tableInfo(idx).Size]*2,1), ... %rounding to reflect monitor resolution
+            [tableInfo(idx).Performance], 'DistType', 'Normal',...
+            'Xlim', xl, 'Ylim', yl,...
+            'Chance', gamma, 'Extra');
+        
+    end
+    
+    snellen2020 = thresh*20;
+    
+    save('thresh');
+else
+    load('thresh.mat');
+end
+%% Create summarized table
+
+for ii = 1:length(unique([tableInfo(:).Subject]))
+    tableSubjectInfo(ii).ID = ii;
+    tableSubjectInfo(ii).Stroke = ~control(ii);
+    tableSubjectInfo(ii).Sex = sexAll(ii);
+    tableSubjectInfo(ii).Age = ageAll(ii);
+    tableSubjectInfo(ii).Acuity = snellen2020(ii);
+    tableSubjectInfo(ii).WeeksPostLesion = weeksPostLes(ii);
+    tableSubjectInfo(ii).TextHemifield = affHemText{ii};
+    if ~control(ii)
+        tableSubjectInfo(ii).AngleOfLoss = ...
+            vfResults.patientInfo.(huxID{ii}).middleAngleLoss;
+        tableSubjectInfo(ii).VPMap = vfResults.patientInfo.(huxID{ii}).matrix{1};
+    end
+    
+    idxTask = find([tableInfo(:).Subject] == ii & ...
+        [tableInfo(:).Performance] < 3 & ...
+        [tableInfo(:).bcea] < 6*60);
+    tableSubjectInfo(ii).bceaAllTask = get_bcea([tableInfo(idxTask).x]/60,...
+        [tableInfo(idxTask).y]/60);
+    
+    idxFixation = find([tableInfo(:).Subject] == ii & ...
+        [tableInfo(:).Performance] == 3);
+    
+    %     if ii == 3 || ii == 24
+    %         idxFixation = find([tableInfo(:).Subject] == ii & ...
+    %             [tableInfo(:).Performance] == 3 & ...
+    %             [tableInfo(:).bcea] < 10000);
+    %     else
+    %         idxFixation = find([tableInfo(:).Subject] == ii & ...
+    %             [tableInfo(:).Performance] == 3 & ...
+    %             [tableInfo(:).bcea] < 5000);
+    %     end
+    tableSubjectInfo(ii).bceaAllFix = get_bcea([tableInfo(idxFixation).x]/60,...
+        [tableInfo(idxFixation).y]/60);
+    
+    tempX = [tableInfo(idxFixation).x];
+    tempY = [tableInfo(idxFixation).y];
+    [tempX, id] = unique(tempX);
+    tempY = (tempY(id'));
+    fixIdes = find(tempX < 60 & tempX > -60 & tempY < 60 & tempY > -60);
+    tableSubjectInfo(ii).fixX = tempX(fixIdes);
+    tableSubjectInfo(ii).fixY = tempY(fixIdes);
+    
+    
+    
+    idxFixation = find([tableInfo(:).Subject] == ii & ...
+        [tableInfo(:).Task] == 2);
+    
+    
+    tempX = [tableInfo(idxFixation).x];
+    tempY = [tableInfo(idxFixation).y];
+    [tempX, id] = unique(tempX);
+    tempY = (tempY(id'));
+    fixIdes = find(tempX < 60 & tempX > -60 & tempY < 60 & tempY > -60);
+    tableSubjectInfo(ii).fixX = tempX(fixIdes);
+    tableSubjectInfo(ii).fixY = tempY(fixIdes);
+    
+    
+end
+
+%% Figure 2A - Heatmaps for Fixation
+axisVal = 30;
+figure('Position',[2000 -10 1200 3000]);
+counter = 1;
+for ii = (find([tableSubjectInfo(:).Stroke] == 1)) %Patients
+    subplot(4,4,counter)
+    if counter == 1
+        heatMapIm = generateHeatMapSimple( ...
+            [tableSubjectInfo(ii).fixX], ...
+            [tableSubjectInfo(ii).fixY], ...s
+            'Bins', 30,...
+            'StimulusSize', 0,...
+            'AxisValue', axisVal,...
+            'Uncrowded', 4,...
+            'Borders', 1);
+        xlabel('arcminutes');
+        ylabel('arcminutes');
+    else
+        heatMapIm = generateHeatMapSimple( ...
+            [tableSubjectInfo(ii).fixX], ...
+            [tableSubjectInfo(ii).fixY], ...
+            'Bins', 30,...
+            'StimulusSize', 0,...
+            'AxisValue', axisVal,...
+            'Uncrowded', 4,...
+            'Borders', 0);
+    end
+    hold on
+    line([0 0],[-axisVal axisVal],'LineStyle','--','Color','k','LineWidth',1);
+    line([-axisVal axisVal],[0 0],'LineStyle','--','Color','k','LineWidth',1);
+    axis square
+    title(ii);
+    counter = counter + 1;
+end
+
+
+figure('Position',[2000 -10 1200 3000]);
+counter = 1;
+for ii = (find([tableSubjectInfo(:).Stroke] == 0)) %Controls
+    subplot(4,4,counter)
+    if counter == 1
+        heatMapIm2{ii} = generateHeatMapSimple( ...
+            [tableSubjectInfo(ii).fixX], ...
+            [tableSubjectInfo(ii).fixY], ...s
+            'Bins', 30,...
+            'StimulusSize', 0,...
+            'AxisValue', axisVal,...
+            'Uncrowded', 4,...
+            'Borders', 1);
+        xlabel('arcminutes');
+        ylabel('arcminutes');
+    else
+        heatMapIm2{ii} = generateHeatMapSimple( ...
+            [tableSubjectInfo(ii).fixX], ...
+            [tableSubjectInfo(ii).fixY], ...
+            'Bins', 30,...
+            'StimulusSize', 0,...
+            'AxisValue', axisVal,...
+            'Uncrowded', 4,...
+            'Borders', 0);
+    end
+    hold on
+    line([0 0],[-axisVal axisVal],'LineStyle','--','Color','k','LineWidth',1);
+    line([-axisVal axisVal],[0 0],'LineStyle','--','Color','k','LineWidth',1);
+    axis square
+    title(ii);
+    counter = counter + 1;
+end
+
+%% Figure 2B - BCEA for Fixation
+figure;
+boxplot([tableSubjectInfo.bceaAllFix],...
+    [tableSubjectInfo.Stroke],'PlotStyle','compact',...
+    'Labels',{'Control','Patient'});
+
+set(gca, 'YScale', 'log')
+ylim([.05 10])
+yticks([.3 1 2 10])
+xticks([1 2])
+controls = find(control);
+[h,p,~,sts] = ttest2([tableSubjectInfo(~control).bceaAllFix],...
+    [tableSubjectInfo(controls).bceaAllFix]);
+title(sprintf('n.s., p = %.2f',p));
+ylabel('BCEA (deg^2)')
+
 %% Figure 3
 figure('Position',[2100 0 1500 2500]);
 
@@ -196,17 +750,17 @@ imshow(im10)
 ax2 = subplot(6,4,[3 4 7 8]);
 imshow(im30)
 counter = 9;
-for ii = 1:height(tableSubjectInfo)
-    if tableSubjectInfo.Stroke(ii) == 0
+for ii = 1:length(tableSubjectInfo)
+    if tableSubjectInfo(ii).Stroke == 0
         continue;
     end
     lossIdx = find(vfResults.patientInfo.(huxID{ii}).deficit);
     lossAngles = vfResults.patientInfo.(huxID{ii}).rAngles(lossIdx);
     meanAngleRad = circ_mean(lossAngles');
     rotateAngle = mod(rad2deg(meanAngleRad),360);
-
+    
     subplot(6,4,counter)
-    temp = tableSubjectInfo.vfMap{ii};
+    temp = tableSubjectInfo(ii).VPMap;
     temp(isnan(temp)) = -20;
     
     
@@ -222,7 +776,6 @@ for ii = 1:height(tableSubjectInfo)
     xticks([1 540])
     xticklabels({'',''})
     yticklabels({'',''})
-    %     end
     
     title(sprintf('P%i',ii));
     
@@ -232,22 +785,27 @@ end
 %%
 counter = 1;
 figure('Position',[2100 0 1500 800]);
-for ii = 1:height(tableSubjectInfo)
-    if tableSubjectInfo.Stroke(ii) == 0
+for ii = 1:length(tableSubjectInfo)
+    if tableSubjectInfo(ii).Stroke == 0
+        tableSubjectInfo(ii).allRotated = ([tableSubjectInfo(ii).fixX;...
+            tableSubjectInfo(ii).fixY]);
         continue;
     end
     lossIdx = find(vfResults.patientInfo.(huxID{ii}).deficit);
     lossAngles = vfResults.patientInfo.(huxID{ii}).rAngles(lossIdx);
     meanAngleRad = circ_mean(lossAngles');
     rotateAngle = mod(rad2deg(meanAngleRad),360);
- 
+    
     axisVal = 30;
     
-    [h, xT] = unique(tableSubjectInfo.fixX{ii});
-    v = [tableSubjectInfo.fixX{ii}(xT);tableSubjectInfo.fixY{ii}(xT)]';
+    
+    v = [tableSubjectInfo(ii).fixX;tableSubjectInfo(ii).fixY]';
     theta = -rotateAngle;
     R = [cosd(theta) -sind(theta); sind(theta) cosd(theta)];
     vRTemp = (v*R);
+    tableSubjectInfo(ii).allRotated = [vRTemp(:,1)';...
+        vRTemp(:,2)'];
+    
     idx = find(vRTemp(:,1) < axisVal & vRTemp(:,1) > -axisVal...
         & vRTemp(:,2) < axisVal & vRTemp(:,2) > -axisVal);
     vR = vRTemp(idx,:);
@@ -293,8 +851,6 @@ ptAll = mean(y,3);
 y = [];
 y = cat(3,heatMapIm2{:});
 ctAll = mean(y,3);
-
-
 %% Figure 4A
 figure('Position',[2100 0 1200 600]);
 subplot(1,2,1)
@@ -303,17 +859,8 @@ result = ptAll;
 pcolor(linspace(-axisVal,axisVal, size(result, 1)),...
     linspace(-axisVal, axisVal, size(result, 1)),...
     result');
-shading interp; %interp/flat
-
-%   generateHeatMapSimple( ...
-%         [tableSubjectInfo.fixationGroupX{find(tableSubjectInfo.Stroke)'}]  , ...
-%         [tableSubjectInfo.fixationGroupY{find(tableSubjectInfo.Stroke)'}]  , ...
-%         'Bins', 30,...
-%         'StimulusSize', 16,...
-%         'AxisValue', axisVal,...
-%         'Uncrowded', 0,...
-%         'Borders', 1);
-    colormap((parula))
+shading interp;
+colormap((parula))
 hold on
 forleg = [];
 patientsAllX = [];
@@ -323,13 +870,13 @@ x1 = [0 0];
 y1 = [5 18];
 drawArrow(x1,y1,'linewidth',2,'color','k');
 hold on
-for ii = find(tableSubjectInfo.Stroke == 1)'
+for ii = find([tableSubjectInfo(:).Stroke] == 1)
     lossIdx = find(vfResults.patientInfo.(huxID{ii}).deficit);
     lossAngles = vfResults.patientInfo.(huxID{ii}).rAngles(lossIdx);
     meanAngleRad = circ_mean(lossAngles');
     rotateAngle = mod(rad2deg(meanAngleRad),360);
     
-    v = [tableSubjectInfo.fixationGroupX{ii};tableSubjectInfo.fixationGroupY{ii}]';
+    v = [tableSubjectInfo(ii).fixX;tableSubjectInfo(ii).fixY]';
     theta = -rotateAngle;
     R = [cosd(theta) -sind(theta); sind(theta) cosd(theta)];
     vR = v*R;
@@ -353,8 +900,8 @@ for ii = find(tableSubjectInfo.Stroke == 1)'
 end
 title('Patients')
 ellipseXY(patientsAllX, patientsAllY, 65, 'r' ,2)
-forleg(1) = plot(mean(patientsAllX),mean(patientsAllY),...
-    'd','Color','w','MarkerFaceColor','k')
+forleg(1) = plot(median(patientsAllX),median(patientsAllY),...
+    'd','Color','w','MarkerFaceColor','k');
 forleg(2) = plot(0,0,'-','Color',[150 150 150]/255);
 legend(forleg,{'Average PLF','68% Countour Ellipse'},'Location','southwest');
 text(-1,5,'Blind Field Direction','Rotation',90);
@@ -364,36 +911,23 @@ result = ctAll;
 pcolor(linspace(-axisVal,axisVal, size(result, 1)),...
     linspace(-axisVal, axisVal, size(result, 1)),...
     result');
-shading interp; %interp/flat
-%  generateHeatMapSimple( ...
-%         [tableSubjectInfo.fixationGroupX{find(~tableSubjectInfo.Stroke)'}]  , ...
-%         [tableSubjectInfo.fixationGroupY{find(~tableSubjectInfo.Stroke)'}]  , ...
-%         'Bins', 30,...
-%         'StimulusSize', 16,...
-%         'AxisValue', axisVal,...
-%         'Uncrowded', 0,...
-%         'Borders', 1);
-%     colormap(flipud(parula))
-    load('./MyColormaps.mat');
-    mycmap(1,:) = [1 1 1];
-    set(gcf, 'Colormap', mycmap)
-    cb = colorbar('Location','north');
-    cb.Ticks = ([0.01 0.8]) ; %Create 8 ticks from zero to 1
-    cb.TickLabels = ([0 1]) ; 
-    ylabel(cb,'Normalized Gaze Distribution','FontSize',12,'Rotation',0)
-%     colorbar
-%  cbh = colorbar ; %Create Colorbar
-%  cbh.Ticks = linspace(0, 0, 8) ; %Create 8 ticks from zero to 1
-%  cbh.TickLabels = num2cell([0:1]) ; 
-    hold on
+shading interp;
+load('./MyColormaps.mat');
+mycmap(1,:) = [1 1 1];
+set(gcf, 'Colormap', mycmap)
+cb = colorbar('Location','north');
+cb.Ticks = ([0.01 0.8]) ; %Create 8 ticks from zero to 1
+cb.TickLabels = ([0 1]) ;
+ylabel(cb,'Normalized Gaze Distribution','FontSize',12,'Rotation',0)
+hold on
 patientsAllX = [];
 patientsAllY = [];
 
-for ii = find(tableSubjectInfo.Stroke == 0)'
+for ii = find([tableSubjectInfo(:).Stroke] == 0)
     
     rotateAngle = 0;
     
-    v = [tableSubjectInfo.fixationGroupX{ii};tableSubjectInfo.fixationGroupY{ii}]';
+    v = [tableSubjectInfo(ii).fixX;tableSubjectInfo(ii).fixY]';
     theta = -rotateAngle;
     R = [cosd(theta) -sind(theta); sind(theta) cosd(theta)];
     vR = v*R;
@@ -413,21 +947,20 @@ for ii = find(tableSubjectInfo.Stroke == 0)'
     axis square;
     
     set(gca,'XTick',[-20 0 20],'YTick',[-20 0 20],'xlabel',[],'ylabel',[])
-    %         title(sprintf('%s',subjectsAll{ii}));
-    
 end
 title('Controls')
 ellipseXY(patientsAllX, patientsAllY, 65, 'r' ,2)
-plot(mean(patientsAllX),mean(patientsAllY),'d','Color','w','MarkerFaceColor','k')
-
-
-
+plot(median(patientsAllX),median(patientsAllY),'d','Color','w','MarkerFaceColor','k')
 %% Figure3B and C
+for ii = 1:length(tableSubjectInfo)
+    rotForHistogram{ii} = tableSubjectInfo(ii).allRotated;
+end
 
 [pY_FullFixation, meanValsCL, meanValsPT, meansValsIndY] = ...
-    histogramNormalizedForRotation(1:26, ~tableSubjectInfo.Stroke, ...
-    tableSubjectInfo.allRotated,...
-    tableSubjectInfo.allRotated, 2, 0); %x = 1 or y = 2
+    histogramNormalizedForRotation(1:26, ~[tableSubjectInfo(:).Stroke], ...
+    rotForHistogram,...
+    rotForHistogram, 2, 0); %x = 1 or y = 2
+
 text([25],[.5],'Blind Field ->','Fontsize',12,'FontWeight','bold','Color','b')
 xlabel('Arcminute Offset')
 
@@ -519,17 +1052,17 @@ prl.y = [3.4364948,2.8098791,2.8107243,-0.28045452,6.5732045,7.8145442,9.4996395
 %                     counter = counter + 1;
 %                 end
 %                 %                 if counter > 1
-%                 
+%
 %                 %                 msAngle = [msAngle...
 %                 %                     path.msAngle];
 %                 msPosition{1,trialCounter} = path.position(i).x{1};
 %                 msPosition{2,trialCounter} = path.position(i).y{1};
-%                 
+%
 %                 trialCounter = trialCounter + 1;
 %                 %                 end
 %             end
 %         end
-%         
+%
 %     end
 %     %     msIdx = find(~isnan(msStartX) & ~isnan(msStartY) &...
 %     %         ~isnan(msEndX) & ~isnan(msEndY))
@@ -542,7 +1075,7 @@ prl.y = [3.4364948,2.8098791,2.8107243,-0.28045452,6.5732045,7.8145442,9.4996395
 %     msTask{ii}.msStart(2,:) =  msStartY;
 %     msTask{ii}.msEnd(1,:) = msEndX;
 %     msTask{ii}.msEnd(2,:) = msEndY;
-%     
+%
 %     %     for i = 1:length(fixationInfo{ii}.tracesX)
 %     %         findMSandSPostProcess(pptrials,i)
 %     %     end
@@ -707,7 +1240,7 @@ for t = find(tableSubjectInfo.Stroke)'
     theta_deg = mod(msAllAnalysis.fixation{t}.msAngleCorrected(...
         msAllAnalysis.fixation{t}.msAmpCorrected > msThreshold),360);
     theta_radians = deg2rad(theta_deg);
-  
+    
     theta_radians = deg2rad(theta_deg);
     for i = 1:length(majorAxis)
         if majorAxis(i) == 0
@@ -719,9 +1252,9 @@ for t = find(tableSubjectInfo.Stroke)'
         end
         values2(ii,i) = length(find(vecVals2{ii,i}));
         
-%         vecVals3{ii,i} = (theta_degNonRot < majorAxis(i) + 15 &...
-%             theta_degNonRot > majorAxis(i)-15);
-%         values3(ii,i) = length(find(vecVals3{ii,i}));
+        %         vecVals3{ii,i} = (theta_degNonRot < majorAxis(i) + 15 &...
+        %             theta_degNonRot > majorAxis(i)-15);
+        %         values3(ii,i) = length(find(vecVals3{ii,i}));
         SEMVal(ii,i) = sem((theta_deg(theta_deg < majorAxis(i) + 15 &...
             theta_deg > majorAxis(i)-15)));
     end
@@ -840,7 +1373,7 @@ xticklabels({'Towards BF','Away from BF'});
 title(sprintf('p = %.3f',p));
 set(gca,'FontSize',14);
 
-%%
+%% MS
 load('msAllAnalysis.mat')
 
 % msAllAnalysis.task = msTask;
@@ -860,7 +1393,7 @@ for t = (find(tableSubjectInfo.Stroke == 1))'
     theta_radians = [];
     theta_deg = reshape(msAllAnalysis.fixation{t}.msAngleStructRotate,1,[]);
     theta_degNonRot = reshape(msAllAnalysis.fixation{t}.msAngleStruct,1,[]);
-
+    
     theta_radians = deg2rad(theta_deg);
     for i = 1:length(majorAxis)
         if majorAxis(i) == 0
@@ -871,7 +1404,7 @@ for t = (find(tableSubjectInfo.Stroke == 1))'
                 theta_deg > majorAxis(i)-15);
         end
         values2(ii,i) = length(find(vecVals2{ii,i}));
-
+        
         vecVals3{ii,i} = (theta_degNonRot < majorAxis(i) + 15 &...
             theta_degNonRot > majorAxis(i)-15);
         values3(ii,i) = length(find(vecVals3{ii,i}));
@@ -900,7 +1433,7 @@ for t = (find(tableSubjectInfo.Stroke == 0))'
                 theta_deg > majorAxis(i)-15);
         end
         values2(ii,i) = length(find(vecVals2{ii,i}));
-
+        
         SEMVal(ii,i) = sem((theta_deg(theta_deg < majorAxis(i) + 15 &...
             theta_deg > majorAxis(i)-15)));
     end
@@ -958,7 +1491,7 @@ for ii = 1:26
         counter = counter + 1;
     end
     tIdx = (msAllAnalysis.task{ii}.msAmplitude < 30 &...
-         msAllAnalysis.task{ii}.msAmplitude > 3);
+        msAllAnalysis.task{ii}.msAmplitude > 3);
     if sum(tIdx) == 0
         amplTask(ii) = NaN;
     else
@@ -976,7 +1509,7 @@ xticks([1 2])
 xticklabels({'Task','Fixation'});
 xlim([0 3])
 ylabel('Average Microsaccade Amplitude');
-    
+
 %% Figure 4 Drift Fixation
 load('huxlinDriftFixation.mat')
 subNum = height(tableSubjectInfo);
@@ -1083,9 +1616,9 @@ for ii = 1:length(find(~control))
     P2(ii,:) = dNum.Patients2(ii,:)/sum(dNum.Patients2(ii,:));
 end
 % [h,p] = ttest(mean([P(:,1:11)']), mean([P(:,13:23)'])); %divide in half
-% 
+%
 % [h,p] = ttest(mean([P(:,5:9)']), mean([P(:,17:21)'])); %look at up and down +- 30deg
-% 
+%
 % figure;
 % errorbar([0 1],[mean(sum([P(:,5:9)'])) mean(sum([P(:,17:21)']))],...
 %     [sem(sum([P(:,5:9)'])) sem(sum([P(:,17:21)']))],'-o');
@@ -1157,11 +1690,11 @@ title(sprintf('p = %.3f',p));
 set(gca,'FontSize',14);
 %%
 [~,~,stats] = anovan(mean([msNum.Patients2',...
-       msNum.Controls']),{control});
+    msNum.Controls']),{control});
 multcompare(stats)
 
 [~,~,stats] = anovan(mean([dNum.Patients2',...
-       dNum.Controls']),{control});
+    dNum.Controls']),{control});
 multcompare(stats)
 
 %% Sanity Check - Velocity Check of Drift
@@ -1177,15 +1710,15 @@ multcompare(stats)
 % % % %     line([-60 60],[0 0])
 % % % %     line([0 0],[-60 60])
 % % % %     shading interp
-% % % %     
+% % % %
 % % % %     ax2 = subplot(1,2,2);
-% % % %     
+% % % %
 % % % %     temp = tableSubjectInfo.vfMap{ii};
 % % % %     temp(isnan(temp)) = -20;
-% % % %     
+% % % %
 % % % %     J = imrotate((temp),0);
 % % % %     J(find(J == -20)) = max(max(J));
-% % % %     
+% % % %
 % % % %     imagesc(J);
 % % % %     axis square;
 % % % %     set(gca,'XTick',[],'YTick',[])
@@ -1193,12 +1726,12 @@ multcompare(stats)
 % % % %     title(sprintf('S%i',ii))
 % % % %     colormap(ax1,mycmap)
 % % % % end
-% % % % 
+% % % %
 % % % % for ii = find(~tableSubjectInfo.Stroke)'
 % % % %     figure;
 % % % %     %     ax1 = subplot(10,2,counter)
 % % % %     %         ax1 = subplot(1,2,1);
-% % % %     
+% % % %
 % % % %     heatmpaOutPut{i} = ndhist([dataStruct{ii}.instSpX{:}], ...
 % % % %         [dataStruct{ii}.instSpY{:}],'bins', 4, 'radial','axis',[-200 200 -200 200],'nr','filt');
 % % % %     axis([-60 60 -60 60])
@@ -1208,7 +1741,7 @@ multcompare(stats)
 % % % %     line([-60 60],[0 0])
 % % % %     line([0 0],[-60 60])
 % % % %     shading interp
-% % % %     
+% % % %
 % % % %     title(sprintf('S%i',ii))
 % % % % end
 % % % % suptitle('Ocular Drift Velocity');
@@ -1219,7 +1752,7 @@ multcompare(stats)
 % % % %     ax1 = subplot(1,2,1);
 % % % %     msAmpAll = [msAllAnalysis.fixation{ii}.msAmplitude{:}];
 % % % %     msAngleAll = [msAllAnalysis.fixation{ii}.msAngle{:}];
-% % % %     
+% % % %
 % % % %     idx = msAmpAll < 30;
 % % % %     heatmpaOutPut{i} = polarhistogram(msAngleAll(idx), ...
 % % % %         25);
@@ -1231,13 +1764,13 @@ multcompare(stats)
 % % % %     %     line([0 0],[-10 10])
 % % % %     %     shading interp
 % % % %     ax2 = subplot(1,2,2);
-% % % %     
+% % % %
 % % % %     temp = tableSubjectInfo.vfMap{ii};
 % % % %     temp(isnan(temp)) = -20;
-% % % %     
+% % % %
 % % % %     J = imrotate((temp),0);
 % % % %     J(find(J == -20)) = max(max(J));
-% % % %     
+% % % %
 % % % %     imagesc(J);
 % % % %     axis square;
 % % % %     set(gca,'XTick',[],'YTick',[])
@@ -1246,14 +1779,14 @@ multcompare(stats)
 % % % %     %     colormap(ax1,mycmap)
 % % % % end
 % % % % suptitle('Microsaccade Direction and BF');
-% % % % 
-% % % % 
+% % % %
+% % % %
 % % % % for ii = find(tableSubjectInfo.Stroke == 0)'
 % % % %     figure;
 % % % %     %     ax1 = subplot(1,2,1);
 % % % %     msAmpAll = [msAllAnalysis.fixation{ii}.msAmplitude{:}];
 % % % %     msAngleAll = [msAllAnalysis.fixation{ii}.msAngle{:}];
-% % % %     
+% % % %
 % % % %     idx = msAmpAll < 30;
 % % % %     heatmpaOutPut{i} = polarhistogram(msAngleAll(idx), ...
 % % % %         25);
@@ -1582,7 +2115,9 @@ end
 idx = find(tableSubjectInfo.Acuity < 60);
 
 figure;
-boxplot(tableSubjectInfo.bceaTask,...
+% boxplot(tableSubjectInfo.bceaTask,...
+%     tableSubjectInfo.Stroke','PlotStyle','compact','Labels',{'Control','Patient'});
+boxplot(bceaAllTrials,...
     tableSubjectInfo.Stroke','PlotStyle','compact','Labels',{'Control','Patient'});
 
 set(gca, 'YScale', 'log')
@@ -1592,8 +2127,8 @@ xticks([1 2])
 % xticklabels({'Control','Patient'});
 idx2 = (tableSubjectInfo.Acuity < 60);
 ylabel('BCEA (deg^2)')
-[h,p,~,tt] = ttest2(tableSubjectInfo.bceaTask(tableSubjectInfo.Stroke == 1& idx2),...
-    tableSubjectInfo.bceaTask(tableSubjectInfo.Stroke == 0& idx2));
+[h,p,~,tt] = ttest2(bceaAllTrials(tableSubjectInfo.Stroke == 1& idx2),...
+    bceaAllTrials(tableSubjectInfo.Stroke == 0& idx2));
 title(sprintf('p = %.2f',p));
 %% Figure 5B - Acuity for Task
 
@@ -1678,11 +2213,11 @@ for ii = 1:length(subjectsAll)
         continue;
     end
     if find(control(ii))
-        allHistOut{ii} = histogram(rotatedValsControl{ii}(:,coordVal)','BinLimits',[-60 60],...
+        allHistOut{ii} = histogram(rotatedValsControl{ii}(coordVal,:)','BinLimits',[-60 60],...
             'BinEdges', [-60:0.5:60]);
         %             meanVals(ii) = allControl{ii};
     else
-        allHistOut{ii} = histogram(rotatedValsPT{ii}(:,coordVal)','BinLimits',[-60 60],...
+        allHistOut{ii} = histogram(rotatedValsPT{ii}(coordVal,:)','BinLimits',[-60 60],...
             'BinEdges', [-60:0.5:60]);
         %             meanVals(ii) = allRotated{ii}(:,2)';
     end
@@ -1947,5 +2482,357 @@ end
 % colorbar
 end
 
+function [traces, counter, valid, em] = countingTrials(pptrials)%,numTooShort,numBlinks,numNoTracks,numSaccades,numMicroSaccades)
+%COUNTING TRIALS discards trials based on parameters
+%   Print details of what is being thrown in command window
+
+numTotalTrials = length(pptrials);
+counter = buildCountingStruct;
+valid = buildValidStruct(pptrials);
+traces = [];
+paramsCT.sampling = 341;
+paramsCT.spanMax = 200;
+paramsCT.spanMin = 2;
+
+output = NaN(length(pptrials));
+
+xAll = [];
+yAll = [];
+idAll = [];
+
+for ii = 1:length(pptrials)
+    if ~isfield(pptrials{ii},'pixelAngle')
+        pptrials{ii}.pixelAngle = pptrials{ii}.pxAngle;
+    end
+    output(ii) = 0;
+    msInTrial = 0;
+    sacInTrial = 0;
+    msPartiallyInTrial = 0;
+    %% Task Trial
+    if  ceil(pptrials{ii}.TimeTargetON) > 0 %% TASK TRIAL
+        
+        timeOn = round(pptrials{ii}.TimeTargetON/(1000/paramsCT.sampling));
+        timeOff = round(min(pptrials{ii}.TimeTargetOFF/(1000/paramsCT.sampling)-1, ...
+            pptrials{ii}.ResponseTime/(1000/paramsCT.sampling)));
+        if timeOn + floor(timeOff) > length(pptrials{ii}.x.position)
+            continue;
+        end
+        x = pptrials{ii}.x.position(ceil(timeOn):floor(timeOff)) + ...
+            pptrials{ii}.xoffset * pptrials{ii}.pixelAngle;
+        y = pptrials{ii}.y.position(ceil(timeOn):floor(timeOff)) + ...
+            pptrials{ii}.yoffset * pptrials{ii}.pixelAngle;
+        
+        em.xShift{ii} = x - single(pptrials{ii}.TargetEccentricity * pptrials{ii}.pixelAngle);
+        em.targetEcc(ii) = single(pptrials{ii}.TargetEccentricity * pptrials{ii}.pixelAngle);
+        em.x{ii} = x;
+        em.y{ii} = y;
+        em.eccTarget(ii) =  single(pptrials{ii}.TargetEccentricity * pptrials{ii}.pixelAngle);
+        em.span(ii) = quantile(sqrt((x-mean(x)).^2 + (y-mean(y)).^2), .95); %Caclulates Span
+        em.meanXSpan(ii) = (mean(x)); %%mean span from 0, essentially causing target to be a specific distance
+        em.actualEccTargetDist(ii) = double( mean(x)...
+            - single(pptrials{ii}.TargetEccentricity * pptrials{ii}.pixelAngle));
+        span = em.span(ii);
+        %Performance
+        em.performance(ii) = pptrials{ii}.Correct;
+        em.size(ii) = pptrials{ii}.pixelAngle * double(pptrials{ii}.TargetStrokewidth);
+        em.prl(ii) = mean(hypot(x,y));
+        
+    elseif ceil(pptrials{ii}.TimeFixationON) > 0
+        %% Fixation Trial
+        
+        if pptrials{ii}.TimeFixationON == 0
+            pptrials{ii}.timesOFF = 1;
+            valid.timesOFF(ii) = true;
+            counter.timesOFF = counter.timesOFF+1;
+            output(ii) = 1;
+            continue;
+        end
+        timeOn = ceil(pptrials{ii}.TimeFixationON);
+        timeOff = length(pptrials{ii}.x.position);%round(pptrials{ii}.TimeFixationOFF);
+        
+        
+        x = pptrials{ii}.x.position((ceil(timeOn/(1000/paramsCT.sampling))):timeOff) + pptrials{ii}.pixelAngle * pptrials{ii}.xoffset;
+        y = pptrials{ii}.y.position((ceil(timeOn/(1000/paramsCT.sampling))):timeOff) + pptrials{ii}.pixelAngle * pptrials{ii}.yoffset;
+        
+        em.span(ii) = quantile(sqrt((x-mean(x)).^2 + (y-mean(y)).^2), .95);
+        em.meanXSpan(ii) = (mean(x)); %%mean span from 0, essentially causing target to be a specific distance
+        em.actualEccTargetDist(ii) = double( mean(x)...
+            - single(pptrials{ii}.TargetEccentricity * pptrials{ii}.pixelAngle)); %%Take the DIFFERENCE between the 2
+        span = em.span(ii);
+        em.prl(ii) = mean(hypot(x,y));
+        valid.fixation(ii) = true;
+        counter.Fixation = counter.Fixation+1;
+        output(ii) = 1;
+        continue;
+    else
+        %% Doesn't fall into the category of Fixation or Task Trial - sanity check
+        valid.unknownToss = true;
+        counter.unknownToss = counter.unknownToss + 1;
+        output(ii) = 1;
+        continue;
+    end
+    
+    huxOffset = 180;
+    if sum(abs(x) > huxOffset) > 3 || ...
+            sum(abs(y) > huxOffset) > 3
+        pptrials{ii}.BigOffset = 1;
+        valid.bigoffset(ii) = true;
+        counter.BigOffset = counter.BigOffset+1;
+        output(ii) = 1;
+        continue;
+    end
+    
+    %% Checks for BLINKS
+    if find(pptrials{ii}.blinks.start > timeOn & ...
+            pptrials{ii}.blinks.start < timeOff)...
+            sum(x > 500 | x < -500) > 0 | sum(y > 500 | y < -500) > 0%%%BLINKS
+        valid.blink(ii) = true;
+        counter.Blinks = counter.Blinks+1;
+        output(ii) = 1;
+        continue;
+    end
+    %% Make sure correct eccentricity
+    if ~(round(double(pptrials{ii}.TargetEccentricity)*pptrials{ii}.pixelAngle)) ...
+            == 0%%%Wrong Ecc
+        valid.wrongecc(ii) = true;
+        counter.wrongecc = counter.wrongecc+1;
+        output(ii) = 1;
+        continue;
+    end
+    %% Checks for NO TRACKS
+    if find(pptrials{ii}.notracks.start>timeOn & pptrials{ii}.notracks.start<timeOff)
+        valid.notrack(ii) = true;
+        counter.NoTracks = counter.NoTracks+1;
+        output(ii) = 1;
+        continue;
+    end
+    
+    if  ~isempty(find(diff(x) == 0, 1))
+        valid.notrack(ii) = true;
+        counter.NoTracks = counter.NoTracks+1;
+        output(ii) = 1;
+        continue;
+    end
+    %% Checks for NO RESPONSE
+    if pptrials{ii}.Correct == 3 && pptrials{ii}.TimeFixationON == 0 %%%NO RESPONSE
+        valid.noresponse(ii) = true;
+        counter.NoResponse = counter.NoResponse+1;
+        output(ii) = 1;
+        continue;
+    end
+    %% Checks for MANUAL DISCARD
+    if  ~isempty(pptrials{ii}.invalid.start)
+        valid.manualdiscard(ii) = true;
+        counter.manualDiscard = counter.manualDiscard+1;
+        output(ii) = 1;
+        continue;
+    end
+    %% Makes sure there are no fixation trials
+    if pptrials{ii}.TimeFixationOFF > 0
+        valid.fixation(ii) = true;
+        counter.Fixation = counter.Fixation+1;
+        output(ii) = 1;
+        continue;
+    end
+    %% Checks for Span Limits
+    if span < paramsCT.spanMin || span > paramsCT.spanMax %%%IF Span is too large/too small
+        valid.span(ii) = true;
+        counter.Span = counter.Span+1;
+        output(ii) = 1;
+        continue;
+    end
+    %% Saccade Check
+    sInTrial = 0;
+    if ~isempty(length(pptrials{ii}.saccades.start))
+        for i = 1:length(pptrials{ii}.saccades.start)
+            sStartTime = pptrials{ii}.saccades.start(i);
+            sDurationTime = pptrials{ii}.saccades.duration(i);
+            if (timeOn <= sStartTime) && ...
+                    (timeOff > sStartTime + sDurationTime)
+                sInTrial = 1;
+            elseif (timeOn >= sStartTime) && ...
+                    (timeOn <  sStartTime + sDurationTime) || ...
+                    (timeOff > sStartTime) && ...
+                    (timeOff <= sStartTime + sDurationTime)
+                sInTrial = 1;
+            end
+        end
+        if sInTrial
+            valid.s(ii) = true;
+            counter.Saccades = counter.Saccades+1;
+            counter.TotalTask = counter.TotalTask + 1;
+            continue;
+        end
+    end
+    %% Microsaccade Check
+    if ~isempty(length(pptrials{ii}.microsaccades.start))
+        for i = 1:length(pptrials{ii}.microsaccades.start)
+            msStartTime = pptrials{ii}.microsaccades.start(i);
+            msDurationTime = pptrials{ii}.microsaccades.duration(i);
+            %             msInTrial = 0;
+            %             msPartiallyInTrial = 0;
+            if (timeOn <= msStartTime) && ...
+                    (timeOff > msStartTime + msDurationTime)
+                msInTrial = 1;
+            elseif (timeOn >= msStartTime) && ...
+                    (timeOn <  msStartTime + msDurationTime) || ...
+                    (timeOff > msStartTime) && ...
+                    (timeOff <= msStartTime + msDurationTime)
+                msPartiallyInTrial = 1;
+            end
+        end
+        if msPartiallyInTrial
+            valid.partialMS(ii) = true;
+            counter.partialMS = counter.partialMS+1;
+            output(ii) = 1;
+            continue;
+        elseif msInTrial
+            valid.ms(ii) = true;
+            valid.dms(ii) = true;
+            counter.Microsaccades = counter.Microsaccades+1;
+            counter.TotalTask = counter.TotalTask + 1;
+            continue;
+        end
+    end
+    %% Drift Check
+    if ~isempty(pptrials{ii}.drifts)
+        valid.d(ii) = true;
+        valid.dms(ii) = true;
+        counter.Drifts = counter.Drifts+1;
+        counter.TotalTask = counter.TotalTask + 1;
+        
+        traces.x{counter.Drifts} = x;
+        traces.y{counter.Drifts} = y;
+        continue;
+    else
+        %% Didn't Fufill any other category
+        valid.unknownToss = true;
+        counter.unknownToss = counter.unknownToss + 1;
+    end
+    
+    
+    if ~isfield(params,'OnlyTemp')
+        fprintf('\nThere are %i in total trials prior to filter.\n\n', numTotalTrials)
+        
+        fprintf('There are %i trials that have incorrect start time.\n',counter.timesOFF)
+        fprintf('There are %i trials that have gaze too far off center.\n',counter.GazeOffCenter)
+        fprintf('There are %i trials that have looking at target (Ecc > 0).\n',counter.LookingAtTarget)
+        fprintf('There are %i trials that have too short.\n',counter.TooShort)
+        fprintf('There are %i trials that have large offset.\n',counter.BigOffset)
+        fprintf('There are %i trials that have blinks.\n',counter.Blinks)
+        fprintf('There are %i trials that have no track during stimulus.\n',counter.NoTracks)
+        fprintf('There are %i trials that have no response.\n',counter.NoResponse)
+        fprintf('There are %i trials that have saccades.\n',counter.Saccades)
+        fprintf('There are %i trials that are fixation.\n',counter.Fixation)
+        fprintf('There are %i trials that have large offset for fixation trials.\n',counter.BigOffsetFixation)
+        fprintf('There are %i trials that do not fit within the span.\n',counter.Span)
+        fprintf('There are %i trials that have microsaccades.\n',counter.Microsaccades)
+        fprintf('There are %i trials that have microsaccades only partially in trail.\n',counter.partialMS)
+        fprintf('There are %i trials that have drifts only.\n',counter.Drifts)
+        fprintf('There are %i trials that have been manually discarded.\n',counter.manualDiscard)
+        fprintf('There are %i trials that have been tossed for no category.\n',counter.unknownToss)
+        fprintf('There are %i trials that have been tossed for being the wrong ecc.\n',counter.wrongecc)
+        fprintf('There are %i trials after filter.\n\n',  sum(cell2mat(struct2cell(counter))) - counter.TotalTask)
+        total = sum(cell2mat(struct2cell(counter))) - counter.TotalTask;
+        fprintf('There are %.1f percent of trials tossed for large gaze.\n',  ...
+            (counter.GazeOffCenter/total)*100 )
+        
+        counter.TotalTrials = sum(cell2mat(struct2cell(counter))) - counter.TotalTask;
+        
+        data = struct2table(counter);
+        %         fileLocation = sprintf('../../Data/%s/Graphs/TossedInformation.xlsx',params.subject);
+        %         if figures.HUX_RUN == 1
+        %             writetable(data,fileLocation);
+        %         end
+    end
+end
+    function [spanV1, ...
+            instSpX, ...
+            instSpY, ...
+            mn_speed, ...
+            driftAngle, ...
+            mn_cur, ...
+            varx, ...
+            vary, ...
+            bcea,...
+            span, ...
+            amplitude, ...
+            prlDistance,...
+            prlDistanceX, ...
+            prlDistanceY] = getDriftChar(x, y, smoothing, cutseg, maxSpeed, Fs)
+        % smoothing: 41
+        % cutseg: how much of the drift do you wanna cut from the beginning and end
+        % maxSpeed (arcmin): 180
+        
+        % compute drift span
+        mx = mean(x(cutseg:end-cutseg));
+        my = mean(y(cutseg:end-cutseg));
+        spanV1 = max(sqrt((x - mx).^2 + (y - my).^2));
+        
+        x2 = 2.291; %chi-square variable with two degrees of freedom, encompasing 68% of the highest density points
+        bceaMatrix =  2*x2*pi * std(x) * std(y) * (1-corrcoef(x,y).^2).^0.5; %smaller BCEA correlates to more stable fixation
+        bcea = abs(bceaMatrix(1,2));
+        
+        % s-golay filtering
+        % if smoothing == 0
+        %     smx1 = x;
+        %     smy1 = y;
+        % else
+        smx = sgfilt(x, 3, smoothing, 0);
+        smy = sgfilt(y, 3, smoothing, 0);
+        smx1 = sgfilt(x, 3, smoothing, 1);
+        smy1 = sgfilt(y, 3, smoothing, 1);
+        % end
+        
+        instSpX = smx1*Fs; instSpY = smy1*Fs;%transformed to acrmin/sec
+        
+        % compute drift speed
+        sp = Fs*sqrt(smx1(cutseg:end-cutseg).^2 + smy1(cutseg:end-cutseg).^2);
+        
+        if any(sp > maxSpeed)
+            mn_speed = nan;
+        else
+            mn_speed = mean(sp);
+        end
+        
+        
+        % compute drift curvature
+        tmpCur = abs(cur(smx(cutseg:end-cutseg), smy(cutseg:end-cutseg)));
+        mn_cur = mean(tmpCur(tmpCur < 300));
+        if any(sp > maxSpeed)
+            mn_cur = nan;
+        end
+        % tmpCur = abs(cur(smx(cutseg:end-cutseg), smy(cutseg:end-cutseg)));
+        % tmpCur(tmpCur > 300) = NaN;
+        % mn_cur = nanmean(tmpCur);
+        
+        varx = var(x(cutseg:end-cutseg));
+        vary = var(y(cutseg:end-cutseg));
+        
+        % basisVec = [1,0];
+        % driftAngle = arrayfun(@(x,y) acos(dot([x, y], basisVec)/(norm([x, y])*norm(basisVec))), instSpX, instSpY);
+        % driftAngle(instSpY < 0) = 2*pi - driftAngle(instSpY < 0);
+        
+        driftAngle = arrayfun(@(x,y) getAngle(x,y), instSpX, instSpY);
+        % driftAngle = [];
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        span = quantile(sqrt((x-mean(x)).^2 + (y-mean(y)).^2), .95); %Caclulates Span
+        
+        amplitude = sqrt((x(end) - x(1))^2 + (y(end) - y(1))^2);
+        
+        meanSpan = mean(span);
+        stdSpan= std(span)/sqrt(length(span));
+        
+        meanAmplitude = mean(amplitude);stdAmplitude = std(amplitude)/sqrt(length(amplitude));
+        
+        prlDistance = mean(sqrt(x.^2 + y.^2));
+        prlDistanceX = mean(abs(x));
+        prlDistanceY = mean(abs(y));
+        
+    end
 
 
+
+
+
+end
